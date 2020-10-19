@@ -433,3 +433,26 @@ func (m *HashMap) Iter() <-chan KeyValue {
 
 	return ch
 }
+
+// Iter returns an iterator which could be used in a for range loop.
+// The order of the items is sorted by hash keys.
+func (m *HashMap) IterNoRoutine() <-chan KeyValue {
+	ch := make(chan KeyValue) // do not use a size here since items can get added during iteration
+
+// 	go func() {
+		list := m.list()
+		if list == nil {
+			close(ch)
+			return
+		}
+		item := list.First()
+		for item != nil {
+			value := item.Value()
+			ch <- KeyValue{item.key, value}
+			item = item.Next()
+		}
+		close(ch)
+// 	}()
+
+	return ch
+}
